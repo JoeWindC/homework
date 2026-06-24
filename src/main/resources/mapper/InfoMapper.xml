@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ouyeni.ylggxt.mapper.InfoMapper">
+    <!-- 公告表结果映射。 -->
+    <resultMap id="infoMap" type="Info">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="category" property="category"/>
+        <result column="top_flag" property="topFlag"/>
+        <result column="publish_time" property="publishTime"/>
+        <result column="publish_user" property="publishUser"/>
+    </resultMap>
+
+    <!-- 公告列表。 -->
+    <select id="findAll" resultMap="infoMap">
+        SELECT id, title, content, category, top_flag, publish_time, publish_user
+        FROM sys_info
+        ORDER BY top_flag DESC, publish_time DESC, id DESC
+    </select>
+
+    <!-- 公告搜索。 -->
+    <select id="search" resultMap="infoMap">
+        SELECT id, title, content, category, top_flag, publish_time, publish_user
+        FROM sys_info
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (title LIKE CONCAT('%', #{keyword}, '%')
+                 OR content LIKE CONCAT('%', #{keyword}, '%')
+                 OR publish_user LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+        </where>
+        ORDER BY top_flag DESC, publish_time DESC, id DESC
+    </select>
+
+    <!-- 公告详情。 -->
+    <select id="findById" resultMap="infoMap">
+        SELECT id, title, content, category, top_flag, publish_time, publish_user
+        FROM sys_info
+        WHERE id = #{id}
+    </select>
+
+    <!-- 公告总数。 -->
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM sys_info
+    </select>
+
+    <!-- 新增公告。 -->
+    <insert id="insert" parameterType="Info" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_info (title, content, category, top_flag, publish_time, publish_user)
+        VALUES (#{title}, #{content}, #{category}, IFNULL(#{topFlag}, 0), NOW(), #{publishUser})
+    </insert>
+
+    <!-- 编辑公告。 -->
+    <update id="update" parameterType="Info">
+        UPDATE sys_info
+        SET title = #{title},
+            content = #{content},
+            category = #{category},
+            top_flag = IFNULL(#{topFlag}, 0)
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除公告。 -->
+    <delete id="deleteById">
+        DELETE FROM sys_info
+        WHERE id = #{id}
+    </delete>
+</mapper>

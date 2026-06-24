@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ouyeni.ylggxt.mapper.UserMapper">
+    <!-- 用户表结果映射：把数据库字段映射成 User 实体。 -->
+    <resultMap id="userMap" type="User">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="realname" property="realname"/>
+        <result column="role" property="role"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <!-- 注册时查重。 -->
+    <select id="findByUsername" resultMap="userMap">
+        SELECT id, username, password, realname, role, status
+        FROM sys_user
+        WHERE username = #{username}
+    </select>
+
+    <!-- 登录校验。 -->
+    <select id="login" resultMap="userMap">
+        SELECT id, username, password, realname, role, status
+        FROM sys_user
+        WHERE username = #{username} AND password = #{password}
+    </select>
+
+    <!-- 管理员用户列表。 -->
+    <select id="findAll" resultMap="userMap">
+        SELECT id, username, password, realname, role, status
+        FROM sys_user
+        ORDER BY role, id DESC
+    </select>
+
+    <!-- 用户总数统计。 -->
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM sys_user
+    </select>
+
+    <!-- 启用用户数统计。 -->
+    <select id="countEnabled" resultType="int">
+        SELECT COUNT(*) FROM sys_user WHERE status = 1
+    </select>
+
+    <!-- 新增用户。 -->
+    <insert id="insert" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_user (username, password, realname, role, status)
+        VALUES (#{username}, #{password}, #{realname}, #{role}, #{status})
+    </insert>
+
+    <!-- 修改用户状态。 -->
+    <update id="updateStatus">
+        UPDATE sys_user
+        SET status = #{status}
+        WHERE id = #{id} AND role != 'admin'
+    </update>
+
+    <!-- 删除普通用户。 -->
+    <delete id="deleteById">
+        DELETE FROM sys_user
+        WHERE id = #{id} AND role != 'admin'
+    </delete>
+</mapper>

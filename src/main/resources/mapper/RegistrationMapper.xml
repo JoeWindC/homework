@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ouyeni.ylggxt.mapper.RegistrationMapper">
+    <!-- 挂号预约结果映射。 -->
+    <resultMap id="registrationMap" type="Registration">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="realname" property="realname"/>
+        <result column="department" property="department"/>
+        <result column="doctor_name" property="doctorName"/>
+        <result column="visit_date" property="visitDate"/>
+        <result column="time_period" property="timePeriod"/>
+        <result column="patient_name" property="patientName"/>
+        <result column="phone" property="phone"/>
+        <result column="remark" property="remark"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <!-- 管理员查看全部预约。 -->
+    <select id="findAll" resultMap="registrationMap">
+        SELECT r.id, r.user_id, u.username, u.realname, r.department, r.doctor_name,
+               r.visit_date, r.time_period, r.patient_name, r.phone, r.remark,
+               r.status, r.create_time
+        FROM sys_registration r
+        LEFT JOIN sys_user u ON r.user_id = u.id
+        ORDER BY FIELD(r.status, '待处理', '已确认', '已完成', '已取消'), r.visit_date DESC, r.id DESC
+    </select>
+
+    <!-- 普通用户查看自己的预约。 -->
+    <select id="findByUserId" resultMap="registrationMap">
+        SELECT r.id, r.user_id, u.username, u.realname, r.department, r.doctor_name,
+               r.visit_date, r.time_period, r.patient_name, r.phone, r.remark,
+               r.status, r.create_time
+        FROM sys_registration r
+        LEFT JOIN sys_user u ON r.user_id = u.id
+        WHERE r.user_id = #{userId}
+        ORDER BY r.create_time DESC, r.id DESC
+    </select>
+
+    <!-- 叫号屏展示队列。 -->
+    <select id="findQueueList" resultMap="registrationMap">
+        SELECT r.id, r.user_id, u.username, u.realname, r.department, r.doctor_name,
+               r.visit_date, r.time_period, r.patient_name, r.phone, r.remark,
+               r.status, r.create_time
+        FROM sys_registration r
+        LEFT JOIN sys_user u ON r.user_id = u.id
+        WHERE r.status IN ('待处理', '已确认')
+        ORDER BY FIELD(r.status, '已确认', '待处理'), r.visit_date ASC, r.time_period ASC, r.id ASC
+        LIMIT 12
+    </select>
+
+    <!-- 预约总数统计。 -->
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM sys_registration
+    </select>
+
+    <!-- 待处理数量统计。 -->
+    <select id="countPending" resultType="int">
+        SELECT COUNT(*) FROM sys_registration WHERE status = '待处理'
+    </select>
+
+    <!-- 新增预约。 -->
+    <insert id="insert" parameterType="Registration" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_registration
+        (user_id, department, doctor_name, visit_date, time_period, patient_name, phone, remark, status, create_time)
+        VALUES
+        (#{userId}, #{department}, #{doctorName}, #{visitDate}, #{timePeriod}, #{patientName}, #{phone}, #{remark}, #{status}, NOW())
+    </insert>
+
+    <!-- 更新预约状态。 -->
+    <update id="updateStatus">
+        UPDATE sys_registration
+        SET status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 取消待处理预约。 -->
+    <delete id="deleteById">
+        DELETE FROM sys_registration
+        WHERE id = #{id} AND user_id = #{userId} AND status = '待处理'
+    </delete>
+</mapper>
